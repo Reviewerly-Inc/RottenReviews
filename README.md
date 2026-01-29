@@ -1,44 +1,16 @@
 # RottenReviews: Benchmarking Review Quality with Human and LLM-Based Judgments
-This repository contains the code and data for the paper "**RottenReviews** : Benchmarking Review Quality with Human and LLM-Based Judgments". It should be noted that due to the size of the dataset, we are unable to provide the full dataset in this repository. Hence, the repository contains the codes for the sake of reproducibility and the data are available on Google Drive.
+This repository contains the code and data for the paper "**RottenReviews** : Benchmarking Review Quality with Human and LLM-Based Judgments". It should be noted that due to the size of the dataset, we are unable to provide the full dataset in this repository. Hence, the repository contains the codes for the sake of reproducibility and the data are available on:
+
+* **Hugging Face Datasets**: [https://huggingface.co/datasets/Reviewerly/RottenReviews](https://huggingface.co/datasets/Reviewerly/RottenReviews)
+* **Google Drive**: Follow the provided instructions in [Download from Google Drive](#option-2-download-from-google-drive) section.
 
 By following the instructions below, you can download the dataset and run files to either reproduce the results or use the dataset for your research.
-
-## Table of Contents
-- [Title](#title)
-  - [Table of Contents](#table-of-contents)
-  - [Project Tree](#project-tree)
-- [Dataset](#dataset)
-  - [How to Download the Data](#how-to-download-the-data)
-  - [Dataset Files Overview](#dataset-files-overview)
-  - [Sample of the Raw Data](#sample-of-the-raw-data)
-- [Calculate the Metrics](#calculate-the-metrics)
-  - [Run notebooks](#run-notebooks)
-  - [Quantifiable metrics](#quantifiable-metrics)
-    - [Sample of the output](#sample-of-the-output)
-    - [Quantifiable metrics table](#quantifiable-metrics-table)
-    - [Quantifiable metrics correlation figure](#quantifiable-metrics-correlation-figure)
-  - [Calculate metrics by LLM](#calculate-metrics-by-llm)
-    - [Models](#models)
-    - [Prompt](#prompt)
-    - [Sample of the output](#sample-of-the-output)
-- [Human Annotation](#human-annotation)
-  - [Interface Implementation](#interface-implementation)
-  - [Interface UI](#interface-ui)
-  - [Record Sample](#record-sample)
-  - [Comparison Figures](#comparison-figures)
-- [Predicting Overall Quality of a Review](#predicting-overall-quality-of-a-review)
-  - [Traditional Models](#traditional-models)
-  - [LLM-Based Overall Quality](#llm-based-overall-quality)
-  - [Fine-tuning LLaMA](#fine-tuning-llama)
-- [Abstract](#abstract)
-- [Citation](#citation)
 
 ## Project Tree
 ```
 RottenReviews
 ├─ data
-│  ├─ dataset-overview.txt
-│  ├─ human-annotation-data/ (all the human annotated data would appear here)
+│  ├─ human-annotation-data.jsonl (all the human annotation records) 
 │  ├─ processed/ (all the processed and cleaned data would appear here)
 │  └─ raw/ (all the raw data crawled from different venues would appear here)
 ├─ feature_analysis
@@ -46,7 +18,8 @@ RottenReviews
 │  ├─ stats-qmetrics-distributions-f1000-swj.ipynb
 │  └─ stats-qmetrics-distributions-iclr-neurips-HA.ipynb
 ├─ feature_extraction
-│  └─ process-neurips2023.ipynb
+│  ├─ process-{venue_name}.ipynb
+│  └─ reviewer_based_metrics.py
 ├─ human_annotation
 │  ├─ HA-decision-vs-overall-quality.ipynb
 │  ├─ interface/ (web application for gathering human annotation data)
@@ -66,11 +39,27 @@ RottenReviews
 └─ .gitignore
 ```
 
-# Dataset
+## Dataset
 In this section, we provide detailed instructions on how to download the dataset, an overview of the dataset file organization, and a sample of the raw data.
 
-## How to Download the Data
-Note: You need to install the gdown package to download the dataset.
+### Option 1: Download from Hugging Face
+
+You can directly load the dataset using the 🤗 `datasets` library:
+
+```bash
+pip install datasets
+```
+
+```python
+from datasets import load_dataset
+
+dataset = load_dataset("Reviewerly/RottenReviews")
+```
+
+### Option 2: Download from Google Drive
+
+Note: You need to install the gdown package to download the dataset from Google Drive. You can install it using pip:
+
 ```bash
 pip install gdown
 ```
@@ -81,20 +70,22 @@ cd RottenReviews/
 gdown --folder https://drive.google.com/drive/folders/1Uqfyl5uBKBdZem9kQHkhNSPMPnwqJrYV?usp=sharing
 ```
 
-## Dataset Files Overview
+Now you can find the dataset files in the `data` directory.
+
+### Dataset Files Overview
 | Folder Name   | File Name               | File Size | Record Type | Number of Records | Format  |
 |---------------|-------------------------|-----------|-------------|-------------------|---------|
-| raw           | f1000research          | 497 MB    | Submission  | 4,509  | JSON    |
-| raw           | semantic-web-journal   | 12.7 MB   | Submission  | 796    | JSON    |
-| raw           | iclr-2024              | 148 MB    | Submission  | 7,262  | PKL     |
-| raw           | neurips-2023           | 81.6 MB   | Submission  | 3,395  | PKL     |
+| raw           | f1000research_submission.jsonl          | 497 MB    | Submission  | 8,106  | JSONL    |
+| raw           | semantic-web-journal_submission.jsonl   | 12.7 MB   | Submission  | 798    | JSONL    |
+| raw           | iclr2024_submission.jsonl              | 148 MB    | Submission  | 7,404  | JSONL     |
+| raw           | neurips2023_submission.jsonl           | 81.6 MB   | Submission  | 3,395  | JSONL     |
 | processed     | f1000research          | 41.2 MB   | Review      | 9,482      | CSV     |
 | processed     | semantic-web-journal   | 14.6 MB   | Review      | 2,337      | CSV     |
 | processed     | iclr-2024              | 147 MB    | Review      | 28,028     | JSON    |
 | processed     | neurips-2023           | 80.6 MB   | Review      | 15,175     | JSON    |
-| processed     | merged-200-papers      | 3.3 MB    | Submission  | 200    | JSON    |
+| processed     | merged_200_papers.jsonl      | 3.3 MB    | Submission  | 661    | JSONL    |
 
-## Sample of the Raw Data
+### Sample of the Raw Data
 Here's a sample of raw data from Semantic Web Journal.
 ```json
 {
@@ -136,10 +127,10 @@ Here's a sample of raw data from Semantic Web Journal.
 ```
 
 
-# Calculate the Metrics
+## Calculate the Metrics
 In this work, we calculated two categories of metrics: (1) quantifiable metrics derived using off-the-shelf text processing methods, and (2) metrics obtained by prompting various LLM models to quantify specific aspects of review quality. Below, you will find instructions to reproduce the results, along with sample outputs and visualizations generated from these metrics.
 
-## Run notebooks
+### Run notebooks
 To extract features, start by running the notebooks in the [feature_extraction](feature_extraction/) folder. Each notebook processes raw data from a specific venue, extracts defined features, and saves the processed files in the [data/processed](data/processed) folder. Both quantifiable metrics and LLM-based metrics are calculated within the same notebook. Each notebook includes a dedicated section named "LLM" that separates the code for these two categories of metrics.
 
 #### Sample Run for Feature Extraction
@@ -156,10 +147,10 @@ cd feature_analysis/
 jupyter nbconvert --to notebook --execute stats-qmetrics-distributions-iclr-neurips-HA.ipynb
 ```
 
-## Quantifiable metrics
+### Quantifiable metrics
 Quantifiable metrics derived using off-the-shelf text processing methods are measurable attributes extracted directly from the text of reviews and submissions. These metrics include features such as review length, lexical diversity, sentiment polarity, and readability, among others. By leveraging established natural language processing (NLP) techniques and tools, these metrics provide objective insights into various aspects of review quality, enabling systematic analysis and comparison across datasets.
 
-### Sample of the output
+#### Sample of the output
 ```json
 {
   "paper_id": "11-565",
@@ -184,7 +175,7 @@ Quantifiable metrics derived using off-the-shelf text processing methods are mea
 }
 ```
 
-### Quantifiable metrics table
+
 The table below summarizes the statistics of quantifiable metrics across four venues: NeurIPs, ICLR, F1000, and SWJ. Metrics such as review length, readability, sentiment polarity, and politeness vary significantly across venues, reflecting differences in review styles and submission characteristics. For instance, SWJ reviews are notably longer and more detailed, while NeurIPs and ICLR reviews exhibit higher lexical diversity and politeness scores. These variations highlight the diverse nature of peer review practices across academic venues.
 <div align="center">
 
@@ -209,7 +200,6 @@ The table below summarizes the statistics of quantifiable metrics across four ve
 </div>
 
 
-### Quantifiable metrics correlation figure
 The figure below shows correlations between metrics like review length, sentiment polarity, readability, and politeness for the F1000 dataset.
 <div align="center">
   <img src="images/corr-qmetric-vs-qmetric-f1000.png" alt="Alt text" height="600"/>
@@ -218,16 +208,16 @@ The figure below shows correlations between metrics like review length, sentimen
   <em>Correlation between quantifiable metrics on F1000.</em>
 </p>
 
-## Calculate metrics by LLM
-As mentioned in [Run notebooks](#run-notebooks), by running the notebooks, you can reproduce the results and prompt LLMs to evaluate the review in each aspect defined in the prompt. A sample of the prompt and the list of models used are available in the following subsections.
+### Calculate metrics by LLM
+As mentioned in [Run notebooks](##run-notebooks), by running the notebooks, you can reproduce the results and prompt LLMs to evaluate the review in each aspect defined in the prompt. A sample of the prompt and the list of models used are available in the following subsections.
 
-### Models
+Here is the list of models used in this study:
 - **Qwen-3**: A state-of-the-art model optimized for natural language understanding and generation tasks.
 - **Phi-4**: Known for its advanced reasoning capabilities and contextual comprehension.
 - **GPT-4o**: OpenAI's latest iteration of the GPT series, designed for high-quality text generation.
 
 
-### Prompt
+#### Prompt
 We prompted all the models mentioned above with the same prompt to evaluate review quality. Below is the exact prompt used:
 
 ```markdown
@@ -329,13 +319,12 @@ Return **exactly one** JSON block wrapped in the tag below — **no comments or 
 }
 ```
 
-# Human Annotation
+## Human Annotation
 In this study, we conducted a human evaluation of reviews from four academic venues. We randomly selected 50 papers from each venue, resulting in a dataset of 200 papers along with their associated reviews. This dataset comprises 661 reviews and 200 papers, providing a comprehensive basis for analyzing review quality. The processed dataset is available in `data/processed/merged-200-papers.json`.
 
-## Interface Implementation
+### Interface Implementation
 We implemented the interface to gather human annotation data using Flask and built a web application for this purpose. The source code for the web application is available in the `human_annotation/interface` directory, which contains all necessary files to deploy and run the annotation tool.
 
-## Interface UI
 Here's a screenshot of the user interface of the human data gathering web app:
 <div align="center">
   <img src="images/UI-1.png" alt="User Interface Example" height="400"/>
@@ -346,7 +335,7 @@ Here's a screenshot of the user interface of the human data gathering web app:
 </div>
 
 
-## Record Sample
+### Record Sample
 The recorded data from participants are stored in the `data/human-annotation-data` folder. Each file in this directory represents a single record, containing annotations provided by individual participants. These records include detailed evaluations of review quality across multiple dimensions, such as comprehensiveness, clarity, and fairness. Below is a sample of one record:
 
 ```json
@@ -374,7 +363,8 @@ The recorded data from participants are stored in the `data/human-annotation-dat
 }
 ```
 
-## Comparison Figures
+This figure illustrates the correlation between human-evaluated and LLM-evaluated quality dimensions, as well as the correlation between human-evaluated quality dimensions and quantifiable metrics.
+
 <div align="center">
   <img src="images/kendall-tau-llms.png" alt="Kendall’s τ correlation between human-evaluated and LLMs-evaluated quality dimensions" height="320" style="transform: rotate(-90deg);"/>
   <img src="images/corr-human-vs-qmetric.png" alt="Kendall’s τ correlation between human-evaluated quality dimensions Y-axis and quantifiable metrics X-axis" height="320"/>
@@ -383,10 +373,10 @@ The recorded data from participants are stored in the `data/human-annotation-dat
   <em>Left: Kendall’s τ correlation between human-evaluated and LLMs-evaluated quality dimensions. Right: Kendall’s τ correlation between human-evaluated quality dimensions Y-axis and quantifiable metrics X-axis.</em>
 </p>
 
-# Predicting Overall Quality of a Review
+## Predicting Overall Quality of a Review
 We aimed to predict the overall quality of a review using quantifiable metrics extracted in the previous steps, with labels for overall quality derived from human annotation data. All relevant codes for this section are available in the `predict_review_quality_score` directory.
 
-## Traditional Models
+### Traditional Models
 Below is a list of traditional models used for predicting overall review quality, along with a brief explanation of their setup using `sklearn` library:
 
 1. **Random Forest**:  
@@ -406,14 +396,14 @@ Below is a list of traditional models used for predicting overall review quality
       - `random_state=42`: Ensures reproducibility.  
       - `hidden_layer_sizes=(54, 108, 108, 54)`: Specifies the architecture with four layers and varying neuron counts.
 
-## LLM-Based Overall Quality
-Each LLM quantifies the overall quality of a review on a 0–100 scale, as defined in the [Prompt](#prompt) section. This score reflects the review's overall usefulness and professionalism across dimensions like comprehensiveness, clarity, and fairness. Using three base models and one fine-tuned model (as detailed in [Models](#models)), we compared LLM-generated scores with human annotations to evaluate alignment and reliability in assessing review quality.
+### LLM-Based Overall Quality
+Each LLM quantifies the overall quality of a review on a 0–100 scale, as defined in the [Prompt](#Prompt) section. This score reflects the review's overall usefulness and professionalism across dimensions like comprehensiveness, clarity, and fairness. Using three base models and one fine-tuned model (LLAMA3), we compared LLM-generated scores with human annotations to evaluate alignment and reliability in assessing review quality.
 
-## Fine-tuning LLAMA
+#### Fine-tuning LLAMA
 All the necessary code to fine-tune LLaMA is available in the `predict_review_quality_score/llama3-finetune` directory. You can fine-tune the model using the following command:
 
 ```bash
-cd /home/ali/RottenReviews/predict_review_quality_score/llama3-finetune/
+cd predict_review_quality_score/llama3-finetune/
 
 python llm_eval.py --train_data_path /path/to/train_data.csv \
            --val_data_path /path/to/val_data.csv \
@@ -425,6 +415,8 @@ python llm_eval.py --train_data_path /path/to/train_data.csv \
            --logging_dir /path/to/logging_dir
 ```
 
+This figure compares the performance of traditional models and LLM-based approaches in predicting the overall quality of peer reviews, measured by Kendall’s τ correlation with human evaluations.
+
 <div align="center">
   <img src="images/model-comparison.png" alt="Alt text" height="400"/>
 </div>
@@ -432,8 +424,22 @@ python llm_eval.py --train_data_path /path/to/train_data.csv \
   <em>Kendall’s τ correlation between human-evaluated and models-predicted Overall Quality of peer reviews.</em>
 </p>
 
-# Abstract
+## Abstract
 The quality of peer review plays a critical role in scientific publishing, yet remains poorly understood and challenging to evaluate at scale. In this work, we introduce *RottenReviews*, a benchmark designed to facilitate systematic assessment of review quality. *RottenReviews* comprises over 15,000 submissions from four distinct academic venues enriched with over 9,000 reviewer scholarly profiles and paper metadata. We define and compute a diverse set of quantifiable review-dependent and reviewer-dependent metrics, and compare them against structured assessments from large language models (LLMs) and expert human annotations. Our human-annotated subset includes over 700 paper–review pairs labeled across 13 explainable and conceptual dimensions of review quality. Our empirical findings reveal that LLMs, both zero-shot and fine-tuned, exhibit limited alignment with human expert evaluations of peer review quality. Surprisingly, simple interpretable models trained on quantifiable features outperform fine-tuned LLMs in predicting overall review quality.
 
-# Citation
-TBA
+## Citation
+
+If you use this resource, please cite our paper:
+
+```
+@inproceedings{ebrahimi2025rottenreviews,
+  title={RottenReviews: Benchmarking Review Quality with Human and LLM-Based Judgments},
+  author={Ebrahimi, Sajad and Sadeghian, Soroush and Ghorbanpour, Ali and Arabzadeh, Negar and Salamat, Sara and Li, Muhan and Le, Hai Son and Bashari, Mahdi and Bagheri, Ebrahim},
+  booktitle={Proceedings of the 34th ACM International Conference on Information and Knowledge Management},
+  series = {CIKM '25},
+  pages={5642--5649},
+  year={2025},
+  url = {https://doi.org/10.1145/3746252.3761506},
+  doi = {10.1145/3746252.3761506}
+}
+```
