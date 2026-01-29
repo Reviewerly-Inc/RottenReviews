@@ -67,7 +67,7 @@ pip install gdown
 If you already have the gdown package installed, you can use the following commands to download the dataset:
 ```bash
 cd RottenReviews/
-gdown --folder https://drive.google.com/drive/folders/1Uqfyl5uBKBdZem9kQHkhNSPMPnwqJrYV?usp=sharing
+gdown --folder https://drive.google.com/drive/folders/1Kyi-w6QpmedI6b2MWGZUkK3tdYe9WdyD?usp=sharing
 ```
 
 Now you can find the dataset files in the `data` directory.
