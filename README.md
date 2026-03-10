@@ -1,4 +1,8 @@
 # RottenReviews: Benchmarking Review Quality with Human and LLM-Based Judgments
+
+Quick links: 📃 [Paper](https://reviewer.ly/wp-content/themes/reviewerly-vite-theme/dist/rottenreviews.pdf) | 📊 [Dataset](https://huggingface.co/datasets/Reviewerly/RottenReviews) | 💻 [Demo](https://app.reviewer.ly/app/peeriscope)
+
+
 This repository contains the code and data for the paper "**RottenReviews** : Benchmarking Review Quality with Human and LLM-Based Judgments". It should be noted that due to the size of the dataset, we are unable to provide the full dataset in this repository. Hence, the repository contains the codes for the sake of reproducibility and the data are available on:
 
 * **Hugging Face Datasets**: [https://huggingface.co/datasets/Reviewerly/RottenReviews](https://huggingface.co/datasets/Reviewerly/RottenReviews)
